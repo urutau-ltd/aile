@@ -4,7 +4,9 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"reflect"
+	"runtime"
 	"testing"
 )
 
@@ -179,5 +181,31 @@ func TestSetValueAndValue(t *testing.T) {
 	}
 	if got != 42 {
 		t.Fatalf("unexpected value: got %#v want %#v", got, 42)
+	}
+}
+
+func TestServeMuxMethodPatternSmoke(t *testing.T) {
+	t.Logf("go version: %s", runtime.Version())
+	t.Logf("GOOS=%s GOARCH=%s", runtime.GOOS, runtime.GOARCH)
+	t.Logf("GODEBUG=%q", os.Getenv("GODEBUG"))
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /hello", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte("ok"))
+	})
+
+	req := httptest.NewRequest(http.MethodGet, "/hello", nil)
+
+	h, pattern := mux.Handler(req)
+	t.Logf("resolved pattern=%q handler=%T", pattern, h)
+
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	t.Logf("status=%d body=%q", rec.Code, rec.Body.String())
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("unexpected status: got %d want %d", rec.Code, http.StatusOK)
 	}
 }

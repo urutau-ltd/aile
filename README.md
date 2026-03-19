@@ -154,12 +154,12 @@ is the latest available on GNU Guix. You may use some utilities present in this
 repository if you wish to contribute using guix:
 
 - `make env` should create a new guix shell environment with the necessary
-development dependencies.
+  development dependencies.
 
 - `make pkg` should test if the `guix.scm` package definition of this library
-builds and installs correctly under GNU Guix.
+  builds and installs correctly under GNU Guix.
 
 ## COPYING
 
-Where applicable this project's source code is under the terms of the GNU
-Affero General Public License version 3 or at your option, any later version.
+Where applicable this project's source code is under the terms of the GNU Affero
+General Public License version 3 or at your option, any later version.
