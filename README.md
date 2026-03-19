@@ -153,7 +153,7 @@ Best for open-source applications and network services.
 
 - _Requirement:_ Any modified version of this software, when used over a
   network, must have its source code made available to users.
-- [Read the AGPL-3.0 License](LICENSE-AGPL3.0-or-later.txt)
+- [Read the AGPL-3.0 License](LICENSE-AGPL-3.0-or-later.txt)
 
 ### When choosing the GNU LGPL-3.0
 
@@ -161,4 +161,4 @@ Best for linking in proprietary or commercial applications.
 
 - _Requirement:_ You may link to this library, but modifications to the library
   code itself must be shared.
-- [Read the LGPL-3.0 License](LICENSE-LGPL3.0-or-later.txt)
+- [Read the LGPL-3.0 License](LICENSE-LGPL-3.0-or-later.txt)
