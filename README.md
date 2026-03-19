@@ -143,22 +143,5 @@ These are convenience packages, not core concepts.
 
 ## COPYING
 
-You may choose to use this software under either the GNU Affero General Public
-License v3.0 or later (AGPL-3.0+) or the GNU Lesser General Public License v3.0
-or later (LGPL-3.0+).
-
-### When choosing the GNU AGPL-3.0
-
-Best for open-source applications and network services.
-
-- _Requirement:_ Any modified version of this software, when used over a
-  network, must have its source code made available to users.
-- [Read the AGPL-3.0 License](LICENSE-AGPL-3.0-or-later.txt)
-
-### When choosing the GNU LGPL-3.0
-
-Best for linking in proprietary or commercial applications.
-
-- _Requirement:_ You may link to this library, but modifications to the library
-  code itself must be shared.
-- [Read the LGPL-3.0 License](LICENSE-LGPL-3.0-or-later.txt)
+Where applicable this project's source code is under the terms of the GNU
+Affero General Public License version 3 or at your option, any later version.
