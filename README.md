@@ -1,5 +1,7 @@
 # Aile - Sorry but I can't let you have the model W!
 
+[![Go Reference](https://pkg.go.dev/badge/codeberg.org/urutau-ltd/aile.svg)](https://pkg.go.dev/codeberg.org/urutau-ltd/aile)
+
 `aile` is a small stdlib-first HTTP runtime for Go. It's design is inspired in
 `chi` and `hono`, and it doesn't strive to be a framework, it's more like a tiny
 library that just adds a small amount of structure on top of the standard
