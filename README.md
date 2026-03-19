@@ -143,6 +143,22 @@ Current first-party extras:
 
 These are convenience packages, not core concepts.
 
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md)
+
+## GNU Guix compatiblity
+
+This project is being developed in GNU Guix. And thus the supported Go version
+is the latest available on GNU Guix. You may use some utilities present in this
+repository if you wish to contribute using guix:
+
+- `make env` should create a new guix shell environment with the necessary
+development dependencies.
+
+- `make pkg` should test if the `guix.scm` package definition of this library
+builds and installs correctly under GNU Guix.
+
 ## COPYING
 
 Where applicable this project's source code is under the terms of the GNU

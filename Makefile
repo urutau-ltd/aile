@@ -7,6 +7,9 @@ test:
 env:
 	guix shell --network -m ./manifest.scm
 
+pkg:
+	guix build -f ./guix.scm
+
 ci:
 	$(MAKE) test
 
