@@ -3,13 +3,26 @@ package aile
 import "time"
 
 const (
+	// The HTTP server timeout for read operations duration in seconds.
+	// if not set in the application configuration this constant will be used
+	// as the fallback value.
+	//
+	// This is used in the ReadTimeout and ReadHeaderTimeout [Config] fields.
 	READ_TIMEOUT  time.Duration = 5 * time.Second
+	
+	// The HTTP server timeout duration for write operations duration in
+	// seconds.
+	// if not set in the application configuration this constant will be
+	// used as the fallback value.
+	//
+	// This is used in the WriteTimeout and ShutdownTimeout [Config] fields.
 	WRITE_TIMEOUT time.Duration = 10 * time.Second
 	LONG_TIMEOUT  time.Duration = 60 * time.Second
 )
 
 // Config controls the HTTP server runtime.
 type Config struct {
+	// An HTTP server address to serve the aile [App].
 	Addr              string
 	ReadTimeout       time.Duration
 	ReadHeaderTimeout time.Duration

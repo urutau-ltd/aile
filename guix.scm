@@ -34,7 +34,7 @@
 (define-public go-codeberg-org-urutau-ltd-aile
   (package
     (name "go-codeberg-org-urutau-ltd-aile")
-    (version "1.0.0")
+    (version "1.0.0-1")
     (source
      (origin
        (method git-fetch)
@@ -43,7 +43,7 @@
              (commit (string-append "v" version))))
        (file-name (git-file-name name version))
        (sha256
-        (base32 "028sdacmmb1r388by9zhadai7ss7f6fzncljdq18c553d6s9l0yd"))))
+        (base32 "1jmym2q9p9b36vhic31vf42p8gcc6g9gxapds5v127g0hwbpkpz1"))))
     (build-system go-build-system)
     (arguments
      (list
@@ -51,7 +51,7 @@
       ;; Tests disabled until the go-build-system stops breaking
       ;; unit tests with 404 errors. They work fine locally, idk why
       ;; the tests phase is dumb and likes to break things.
-      #:tests? #f
+      ;#:tests? #f
       #:import-path "codeberg.org/urutau-ltd/aile"))
     (home-page "https://codeberg.org/urutau-ltd/aile")
     (synopsis "Small http runtime for Go")
