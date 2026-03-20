@@ -8,8 +8,8 @@ const (
 	// as the fallback value.
 	//
 	// This is used in the ReadTimeout and ReadHeaderTimeout [Config] fields.
-	READ_TIMEOUT  time.Duration = 5 * time.Second
-	
+	READ_TIMEOUT time.Duration = 5 * time.Second
+
 	// The HTTP server timeout duration for write operations duration in
 	// seconds.
 	// if not set in the application configuration this constant will be

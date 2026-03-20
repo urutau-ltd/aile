@@ -25,7 +25,11 @@ func TestNewDefaults(t *testing.T) {
 }
 
 func TestBuildRegistersLiteralServeMuxPatterns(t *testing.T) {
-	app := MustNew()
+	app, err := New()
+
+	if err != nil {
+		t.Fatalf("New returned error: %v", err)
+	}
 
 	app.HandleFunc("GET /hello", func(w http.ResponseWriter, r *http.Request) {
 		Text(w, http.StatusOK, "ok")
@@ -36,16 +40,16 @@ func TestBuildRegistersLiteralServeMuxPatterns(t *testing.T) {
 		t.Fatalf("Build returned error: %v", err)
 	}
 
-	req := httptest.NewRequest(http.MethodGet, "/hello", nil)
-	rec := httptest.NewRecorder()
-	st.Handler.ServeHTTP(rec, req)
+	rec := debugServeMuxRequest(t, st.Mux, http.MethodGet, "/hello")
 
 	if rec.Code != http.StatusOK {
 		t.Fatalf("unexpected status: got %d want %d", rec.Code, http.StatusOK)
 	}
+
 	if rec.Body.String() != "ok" {
 		t.Fatalf("unexpected body: got %q want %q", rec.Body.String(), "ok")
 	}
+
 }
 
 func TestGetHelperRegistersMethodPattern(t *testing.T) {
