@@ -1,0 +1,31 @@
+services:
+  ci:
+    build:
+      context: .
+      dockerfile: Containerfile
+    image: localhost/aile-dev:latest
+    working_dir: /workspace
+    command: ["make", "check-local"]
+    environment:
+      CGO_ENABLED: "0"
+    volumes:
+      - .:/workspace:Z
+      - aile-go-mod:/go/pkg/mod:Z
+      - aile-go-build:/root/.cache/go-build:Z
+
+  shell:
+    image: localhost/aile-dev:latest
+    working_dir: /workspace
+    command: ["bash"]
+    stdin_open: true
+    tty: true
+    environment:
+      CGO_ENABLED: "0"
+    volumes:
+      - .:/workspace:Z
+      - aile-go-mod:/go/pkg/mod:Z
+      - aile-go-build:/root/.cache/go-build:Z
+
+volumes:
+  aile-go-mod:
+  aile-go-build:

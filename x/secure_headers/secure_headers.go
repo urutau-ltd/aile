@@ -4,9 +4,10 @@ import (
 	"net/http"
 	"strconv"
 
-	"codeberg.org/urutau-ltd/aile"
+	"codeberg.org/urutau-ltd/aile/v2"
 )
 
+// Config controls which security headers are added to responses.
 type Config struct {
 	ContentTypeNosniff      bool
 	FrameDeny               bool
@@ -19,6 +20,7 @@ type Config struct {
 	HSTSPreload             bool
 }
 
+// Middleware adds security-related HTTP headers to responses.
 func Middleware(cfg Config) aile.Middleware {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

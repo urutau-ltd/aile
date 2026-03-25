@@ -1,14 +1,16 @@
-// Package aile provides a small stdlib-first HTTP runtime for Go.
+// Package aile provides a small HTTP runtime for Go built around net/http.
 //
-// aile keeps net/http front and center like chi does. it uses [http.ServeMux]
-// [http.Server], [http.Handler] and literal stlib route patterns such as:
+// It uses [http.ServeMux], [http.Server], and [http.Handler]. Routes are
+// registered through helpers such as [App.GET], [App.POST], [App.PUT], and
+// [App.DELETE].
 //
-// "GET /api/v1/example"
-// "POST /users/{id}"
+// Paths keep the same [http.ServeMux] syntax under the hood, such as:
+//
+// "/api/v1/example"
+// "/users/{id}"
 //
 // Aile mainly adds:
-//   - A named build plan
-//   - Patchable phases
-//   - A small application container
-//   - Runtime helpers for signal handling and graceful shutdown
+//   - a small application container
+//   - middleware wiring
+//   - runtime helpers for signals and graceful shutdown
 package aile

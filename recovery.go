@@ -2,6 +2,7 @@ package aile
 
 import "net/http"
 
+// Recovery returns a middleware that converts panics into HTTP 500 responses.
 func Recovery() Middleware {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(

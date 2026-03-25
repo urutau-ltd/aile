@@ -1,5 +1,16 @@
-;; Lo que sigue es un "manifest" equivalente a la línea de comando que
-;; introdujo. Puede almacenarlo dentro de un archivo que pudiese pasar a
-;; cualquier comando 'guix' que acepte una opción '--manifest' (o -m).
+;; Development manifest for aile.
+;;
+;; Most development in this repository is expected to happen through this
+;; manifest. The repo uses Go 1.26.
 
-(specifications->manifest (list "make" "go@1.25" "gopls" "gcc-toolchain" "go-golang-org-x-tools-godoc"))
+(specifications->manifest
+ (list "emacs"
+       "gcc-toolchain"
+       "git"
+       "go@1.26"
+       "go-golang-org-x-tools-godoc"
+       "gopls"
+       "make"
+       "podman"
+       "podman-compose"
+       "ripgrep"))

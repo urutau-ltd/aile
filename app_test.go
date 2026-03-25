@@ -31,7 +31,7 @@ func TestBuildRegistersLiteralServeMuxPatterns(t *testing.T) {
 		t.Fatalf("New returned error: %v", err)
 	}
 
-	app.HandleFunc("GET /hello", func(w http.ResponseWriter, r *http.Request) {
+	app.GET("/hello", func(w http.ResponseWriter, r *http.Request) {
 		Text(w, http.StatusOK, "ok")
 	})
 
@@ -95,7 +95,7 @@ func TestBuildAppliesMiddlewareInExpectedOrder(t *testing.T) {
 		},
 	)
 
-	app.HandleFunc("GET /x", func(w http.ResponseWriter, r *http.Request) {
+	app.GET("/x", func(w http.ResponseWriter, r *http.Request) {
 		got = append(got, "handler")
 		Status(w, http.StatusNoContent)
 	})
@@ -155,19 +155,19 @@ func TestBuildCopiesValues(t *testing.T) {
 	}
 }
 
-func TestBuildFailsOnEmptyPattern(t *testing.T) {
+func TestBuildFailsOnEmptyPath(t *testing.T) {
 	app := MustNew()
-	app.Handle("", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
+	app.GET("", func(w http.ResponseWriter, r *http.Request) {})
 
 	_, err := app.Build(context.Background())
 	if err == nil {
-		t.Fatal("expected build error for empty route pattern")
+		t.Fatal("expected build error for empty route path")
 	}
 }
 
 func TestBuildFailsOnNilHandler(t *testing.T) {
 	app := MustNew()
-	app.Handle("GET /x", nil)
+	app.GET("/x", nil)
 
 	_, err := app.Build(context.Background())
 	if err == nil {

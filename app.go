@@ -16,16 +16,16 @@ type Middleware func(http.Handler) http.Handler
 type HookFunc func(context.Context, *State) error
 
 type routeDef struct {
-	pattern string
-	handler http.Handler
+	method  string
+	path    string
+	handler http.HandlerFunc
 }
 
 // App is the main application container.
 //
-// App is safe (at least I think so) for concurrent reads after construction,
-// but configuration methods such as [aile/Handle], [aile/Use], [aile/Set],
-// [aile/OnStart] and [aile/OnShutdown] should be called before starting
-// the server itself.
+// App is safe for concurrent reads after construction, but configuration
+// methods such as route registration, [App.Use], [App.Set], [App.OnStart] and
+// [App.OnShutdown] should be called before starting the server itself.
 //
 // Configure the app before starting the server. Mutating routes, middleware,
 // values or hooks while serving is NOT supported.
@@ -45,7 +45,7 @@ type App struct {
 	ln      net.Listener
 }
 
-// App constructor function.
+// New constructs a new [App] and applies the provided options.
 func New(opts ...Option) (*App, error) {
 	a := &App{
 		config: DefaultConfig(),
@@ -61,7 +61,7 @@ func New(opts ...Option) (*App, error) {
 	return a, nil
 }
 
-// Same as New but it either builds a new App or the program panics.
+// MustNew is like [New] but panics if construction fails.
 func MustNew(opts ...Option) *App {
 	a, err := New(opts...)
 	if err != nil {
@@ -70,53 +70,52 @@ func MustNew(opts ...Option) *App {
 	return a
 }
 
-// Use appends middleware to an existing App instance
+// Use appends middleware to the app in registration order.
 func (a *App) Use(mw ...Middleware) {
 	a.mws = append(a.mws, mw...)
 }
 
-// Handle registers a literal stdlib ServeMux patter and handler.
-func (a *App) Handle(pattern string, h http.Handler) {
+func (a *App) route(method, path string, h http.HandlerFunc) {
 	a.routes = append(a.routes, routeDef{
-		pattern: pattern,
+		method:  method,
+		path:    path,
 		handler: h,
 	})
 }
 
-// HandleFunc registers a literal stdlib ServeMux pattern and HandlerFunc.
-func (a *App) HandleFunc(pattern string, h http.HandlerFunc) {
-	a.Handle(pattern, h)
-}
-
 // GET registers a GET route in an App.
 func (a *App) GET(pattern string, h http.HandlerFunc) {
-	a.Handle(http.MethodGet+" "+pattern, h)
+	a.route(http.MethodGet, pattern, h)
 }
 
 // POST registers a POST route in an App.
 func (a *App) POST(pattern string, h http.HandlerFunc) {
-	a.Handle(http.MethodPost+" "+pattern, h)
+	a.route(http.MethodPost, pattern, h)
 }
 
 // PUT registers a PUT route in an App.
 func (a *App) PUT(pattern string, h http.HandlerFunc) {
-	a.Handle(http.MethodPut+" "+pattern, h)
+	a.route(http.MethodPut, pattern, h)
 }
 
+// PATCH registers a PATCH route in an App.
 func (a *App) PATCH(pattern string, h http.HandlerFunc) {
-	a.Handle(http.MethodPatch+" "+pattern, h)
+	a.route(http.MethodPatch, pattern, h)
 }
 
+// DELETE registers a DELETE route in an App.
 func (a *App) DELETE(pattern string, h http.HandlerFunc) {
-	a.Handle(http.MethodDelete+" "+pattern, h)
+	a.route(http.MethodDelete, pattern, h)
 }
 
+// HEAD registers a HEAD route in an App.
 func (a *App) HEAD(pattern string, h http.HandlerFunc) {
-	a.Handle(http.MethodHead+" "+pattern, h)
+	a.route(http.MethodHead, pattern, h)
 }
 
+// OPTIONS registers an OPTIONS route in an App.
 func (a *App) OPTIONS(pattern string, h http.HandlerFunc) {
-	a.Handle(http.MethodOptions+" "+pattern, h)
+	a.route(http.MethodOptions, pattern, h)
 }
 
 // Use OnStart to append a startup hook.
@@ -143,7 +142,7 @@ func (a *App) Value(name string) (any, bool) {
 	return v, ok
 }
 
-// Build constructs the App into a State without starting the server.
+// Build constructs the app into a [State] without starting the server.
 func (a *App) Build(ctx context.Context) (*State, error) {
 	_ = ctx
 
@@ -153,15 +152,19 @@ func (a *App) Build(ctx context.Context) (*State, error) {
 	mux := http.NewServeMux()
 
 	for _, rt := range a.routes {
-		if rt.pattern == "" {
-			return nil, errors.New("build: empty route pattern")
+		if rt.method == "" {
+			return nil, errors.New("build: empty route method")
+		}
+
+		if rt.path == "" {
+			return nil, fmt.Errorf("build: empty route path for method %q", rt.method)
 		}
 
 		if rt.handler == nil {
-			return nil, fmt.Errorf("build: nil handler for pattern %q", rt.pattern)
+			return nil, fmt.Errorf("build: nil handler for route %q", rt.method+" "+rt.path)
 		}
 
-		mux.Handle(rt.pattern, rt.handler)
+		mux.Handle(rt.method+" "+rt.path, rt.handler)
 	}
 
 	var handler http.Handler = mux

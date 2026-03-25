@@ -31,32 +31,29 @@
               #:prefix license:)
              (guix gexp))
 
-(define-public go-codeberg-org-urutau-ltd-aile
+(define %project-directory
+  (dirname (current-filename)))
+
+(define-public go-codeberg-org-urutau-ltd-aile-v2
   (package
-    (name "go-codeberg-org-urutau-ltd-aile")
-    (version "1.0.0-1")
+    (name "go-codeberg-org-urutau-ltd-aile-v2")
+    (version "2.0.0")
     (source
-     (origin
-       (method git-fetch)
-       (uri (git-reference
-             (url "https://codeberg.org/urutau-ltd/aile.git")
-             (commit (string-append "v" version))))
-       (file-name (git-file-name name version))
-       (sha256
-        (base32 "1jmym2q9p9b36vhic31vf42p8gcc6g9gxapds5v127g0hwbpkpz1"))))
+     (local-file %project-directory
+                 "aile-checkout"
+                 #:recursive? #t
+                 #:select? (git-predicate %project-directory)))
     (build-system go-build-system)
     (arguments
      (list
-      #:go go-1.25
-      ;; Tests disabled until the go-build-system stops breaking
-      ;; unit tests with 404 errors. They work fine locally, idk why
-      ;; the tests phase is dumb and likes to break things.
-      ;#:tests? #f
-      #:import-path "codeberg.org/urutau-ltd/aile"))
+      #:go go-1.26
+      #:import-path "codeberg.org/urutau-ltd/aile/v2"))
     (home-page "https://codeberg.org/urutau-ltd/aile")
     (synopsis "Small http runtime for Go")
     (description
-     "Package aile provides a small stdlib-first HTTP runtime for Go.")
+     "Package aile provides a small HTTP runtime for Go built around the
+standard library. This package definition builds the local repository checkout
+with the Go 1.26 toolchain.")
     (license license:agpl3)))
 
-go-codeberg-org-urutau-ltd-aile
+go-codeberg-org-urutau-ltd-aile-v2

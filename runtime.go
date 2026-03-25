@@ -10,9 +10,12 @@ import (
 	"syscall"
 )
 
+// Addr returns the current listener address for a running app.
+//
+// If the app is not running, Addr returns the empty string.
 func (a *App) Addr() string {
-	a.mu.Lock()
-	defer a.mu.Unlock()
+	a.mu.RLock()
+	defer a.mu.RUnlock()
 
 	if a.ln == nil {
 		return ""
@@ -21,6 +24,7 @@ func (a *App) Addr() string {
 	return a.ln.Addr().String()
 }
 
+// Serve builds the app and serves it on the provided listener.
 func (a *App) Serve(ln net.Listener) error {
 	st, err := a.Build(context.Background())
 
@@ -32,6 +36,7 @@ func (a *App) Serve(ln net.Listener) error {
 	defer a.clearRunning()
 
 	if err := runHooks(context.Background(), st, a.onStart); err != nil {
+		_ = ln.Close()
 		return err
 	}
 
@@ -41,13 +46,10 @@ func (a *App) Serve(ln net.Listener) error {
 	}
 
 	hookErr := runHooks(context.Background(), st, a.onShutdown)
-	if err != nil {
-		err = hookErr
-	}
-
-	return err
+	return errors.Join(err, hookErr)
 }
 
+// ListenAndServe listens on the configured address and then serves the app.
 func (a *App) ListenAndServe() error {
 	st, err := a.Build(context.Background())
 	if err != nil {
@@ -62,8 +64,8 @@ func (a *App) ListenAndServe() error {
 	return a.Serve(ln)
 }
 
-// Attempt to shutdown gracefully a currently running [aile/App].
-// if the app is not running, Shutdown returns nil.
+// Shutdown gracefully stops a running app.
+// If the app is not running, it returns nil.
 func (a *App) Shutdown(ctx context.Context) error {
 	a.mu.RLock()
 	st := a.running
@@ -76,6 +78,8 @@ func (a *App) Shutdown(ctx context.Context) error {
 	return st.Server.Shutdown(ctx)
 }
 
+// Run listens on the configured address, serves requests, handles shutdown
+// signals and performs graceful shutdown.
 func (a *App) Run(ctx context.Context) error {
 	st, err := a.Build(ctx)
 
@@ -124,11 +128,7 @@ func (a *App) Run(ctx context.Context) error {
 	}
 
 	hookErr := runHooks(context.Background(), st, a.onShutdown)
-	if runErr == nil {
-		runErr = hookErr
-	}
-
-	return runErr
+	return errors.Join(runErr, hookErr)
 }
 
 func runHooks(ctx context.Context, st *State, hooks []HookFunc) error {

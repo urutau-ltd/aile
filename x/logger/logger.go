@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"time"
 
-	"codeberg.org/urutau-ltd/aile"
+	"codeberg.org/urutau-ltd/aile/v2"
 )
 
 type responseWriter struct {
@@ -19,6 +19,7 @@ type responseWriter struct {
 	wroteHeader bool
 }
 
+// Middleware logs basic request and response information using slog.
 func Middleware(l *slog.Logger) aile.Middleware {
 	if l == nil {
 		l = slog.Default()

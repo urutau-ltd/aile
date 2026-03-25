@@ -2,7 +2,7 @@ package aile
 
 import "net/http"
 
-// State is the built runtime state for a given [aile/App]
+// State is the built runtime state for a given [App].
 type State struct {
 	Config  Config
 	Mux     *http.ServeMux

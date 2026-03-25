@@ -8,7 +8,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"codeberg.org/urutau-ltd/aile"
+	"codeberg.org/urutau-ltd/aile/v2"
 )
 
 func TestMiddleware(t *testing.T) {
@@ -32,7 +32,7 @@ func TestLoggerMiddlewareWorksInsideApp(t *testing.T) {
 	app := aile.MustNew()
 
 	app.Use(Middleware(l))
-	app.HandleFunc("GET /x", func(w http.ResponseWriter, r *http.Request) {
+	app.GET("/x", func(w http.ResponseWriter, r *http.Request) {
 		aile.Text(w, http.StatusOK, "ok")
 	})
 

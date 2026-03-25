@@ -2,6 +2,7 @@ package aile
 
 import (
 	"context"
+	"errors"
 	"net"
 	"net/http"
 	"testing"
@@ -21,7 +22,7 @@ func TestShutdownBeforeBuildIsNoop(t *testing.T) {
 
 func TestServeCallsStartAndShutdownHooks(t *testing.T) {
 	app := MustNew(WithAddr("127.0.0.1:0"))
-	app.HandleFunc("GET /ping", func(w http.ResponseWriter, r *http.Request) {
+	app.GET("/ping", func(w http.ResponseWriter, r *http.Request) {
 		Text(w, http.StatusOK, "ok")
 	})
 
@@ -69,7 +70,7 @@ func TestServeCallsStartAndShutdownHooks(t *testing.T) {
 
 func TestServeSetsRealAddr(t *testing.T) {
 	app := MustNew(WithAddr("127.0.0.1:0"))
-	app.HandleFunc("GET /ping", func(w http.ResponseWriter, r *http.Request) {
+	app.GET("/ping", func(w http.ResponseWriter, r *http.Request) {
 		Text(w, http.StatusOK, "ok")
 	})
 
@@ -98,5 +99,67 @@ func TestServeSetsRealAddr(t *testing.T) {
 	addr := <-ready
 	if addr == "" {
 		t.Fatal("expected real runtime addr to be available")
+	}
+}
+
+func TestServeReturnsShutdownHookError(t *testing.T) {
+	app := MustNew(WithAddr("127.0.0.1:0"))
+	app.GET("/ping", func(w http.ResponseWriter, r *http.Request) {
+		Text(w, http.StatusOK, "ok")
+	})
+
+	want := errors.New("shutdown hook failed")
+
+	app.OnStart(func(ctx context.Context, st *State) error {
+		go func() {
+			time.Sleep(50 * time.Millisecond)
+			shutdownCtx, cancel := context.WithTimeout(context.Background(), time.Second)
+			defer cancel()
+			_ = st.Server.Shutdown(shutdownCtx)
+		}()
+		return nil
+	})
+
+	app.OnShutdown(func(ctx context.Context, st *State) error {
+		return want
+	})
+
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("net.Listen returned error: %v", err)
+	}
+	defer ln.Close()
+
+	err = app.Serve(ln)
+	if !errors.Is(err, want) {
+		t.Fatalf("Serve error = %v, want error containing %v", err, want)
+	}
+}
+
+func TestRunReturnsShutdownHookError(t *testing.T) {
+	app := MustNew(WithAddr("127.0.0.1:0"))
+	app.GET("/ping", func(w http.ResponseWriter, r *http.Request) {
+		Text(w, http.StatusOK, "ok")
+	})
+
+	want := errors.New("shutdown hook failed")
+
+	app.OnStart(func(ctx context.Context, st *State) error {
+		go func() {
+			time.Sleep(50 * time.Millisecond)
+			shutdownCtx, cancel := context.WithTimeout(context.Background(), time.Second)
+			defer cancel()
+			_ = st.Server.Shutdown(shutdownCtx)
+		}()
+		return nil
+	})
+
+	app.OnShutdown(func(ctx context.Context, st *State) error {
+		return want
+	})
+
+	err := app.Run(context.Background())
+	if !errors.Is(err, want) {
+		t.Fatalf("Run error = %v, want error containing %v", err, want)
 	}
 }

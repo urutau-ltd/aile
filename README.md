@@ -1,14 +1,13 @@
 # Aile - Sorry but I can't let you have the model W!
 
-[![Go Reference](https://pkg.go.dev/badge/codeberg.org/urutau-ltd/aile.svg)](https://pkg.go.dev/codeberg.org/urutau-ltd/aile)
+[![Go Reference](https://pkg.go.dev/badge/codeberg.org/urutau-ltd/aile/v2.svg)](https://pkg.go.dev/codeberg.org/urutau-ltd/aile/v2)
 
-`aile` is a small stdlib-first HTTP runtime for Go. It's design is inspired in
-`chi` and `hono`, and it doesn't strive to be a framework, it's more like a tiny
-library that just adds a small amount of structure on top of the standard
-library API:
+`aile` is a small HTTP runtime for Go built around the standard library. It
+takes a few cues from `chi` and `hono`, but it is not trying to be a full
+framework. It adds a thin layer on top of `net/http`:
 
 - A light application container
-- Middleware Wiring
+- Middleware wiring
 - Graceful shutdown and signal handling
 
 ## Installation
@@ -16,8 +15,49 @@ library API:
 Install this library with:
 
 ```bash
-$ go get -u codeberg.org/urutau-ltd/aile
+$ go get -u codeberg.org/urutau-ltd/aile/v2
 ```
+
+See the v2 migration guide in [`MIGRATING.md`](./MIGRATING.md) if you are
+upgrading an existing app.
+
+## Development Environment
+
+`aile` is developed with GNU Guix first.
+
+This repo uses Go 1.26.
+
+The usual development flow is:
+
+```bash
+$ make guix-env
+```
+
+or directly:
+
+```bash
+$ guix shell --network -m ./manifest.scm
+```
+
+The default `make test`, `make vet`, `make check`, `make example-htmx`, and
+`make example-rest` targets run through the Guix manifest. `make guix-test`,
+`make guix-vet`, and `make guix-check` are there if you want to call the
+Guix-backed variants explicitly.
+
+## Onboarding
+
+If this is your first time in the repo, use this flow:
+
+1. Enter the Guix development environment with `make guix-env`.
+2. Confirm the toolchain inside that shell with `go version` and
+   `gopls version`.
+3. Run `make check-local` inside that shell.
+4. Use `make guix-check` from the host when you want the Makefile to open the
+   Guix environment for you.
+5. Start the editor with `make emacs` if you use Emacs and Eglot.
+6. Run `make pkg` when you need to confirm the local Guix package definition.
+
+Inside that shell you should see a Go 1.26.x toolchain.
 
 ## Quick Start
 
@@ -31,7 +71,7 @@ import (
     "log"
     "net/http"
     
-    "codeberg.org/urutau-ltd/aile"
+    "codeberg.org/urutau-ltd/aile/v2"
 )
 
 func main() {
@@ -41,14 +81,9 @@ func main() {
     }
     
     app.Use(aile.Recovery())
-    
-    app.HandleFunc("GET /ping", func(w http.ResponseWriter, r *http.Request) {
-        aile.Text(w, http.StatusOk, "ok")
-    })
-    
-    // Or use the convenience helpers
-    app.GET("/hello", func(w http.ResponseWriter, r *http.Request) {
-        aile.Text(w, http.StatusOK, "hello")
+
+    app.GET("/ping", func(w http.ResponseWriter, r *http.Request) {
+        aile.Text(w, http.StatusOK, "ok")
     })
     
     if err := app.Run(context.Background()); err != nil {
@@ -59,18 +94,12 @@ func main() {
 
 ## Routes
 
-`aile` does **NOT** parse or re-implement routing. It passes the literal patters
-you should use with `http.ServeMux`:
+`aile` does **NOT** parse or re-implement routing. It keeps `http.ServeMux`
+semantics under the hood, but the public API registers routes through the HTTP
+method helpers:
 
 ```go
-app.HandleFunc("GET /api/v1/something", handler)
-app.HandleFunc("POST /users/{id}", handler)
-app.HandleFunc("/plain/pattern", handler)
-```
-
-There are also convenience helpers:
-
-```go
+app.GET("/api/v1/something", handler)
 app.GET("/users/{id}", handler)
 app.POST("/users", handler)
 app.DELETE("/users/{id}", handler)
@@ -78,7 +107,7 @@ app.DELETE("/users/{id}", handler)
 
 ## Runtime
 
-`Run` does the usual work for you:
+`Run` handles the common case for you:
 
 - Builds an app
 - Opens a listener
@@ -119,6 +148,39 @@ v, ok := app.Value("name")
 
 Built state receives a copy of those values.
 
+## Version
+
+The package exports `aile.Version` and `aile.ReleaseTag`. They are useful for
+logs, diagnostics, and asset versioning.
+
+## Static Files
+
+`aile` keeps static serving very close to the standard library.
+
+If you want app-level convenience:
+
+```go
+assets, err := fs.Sub(public, "public")
+if err != nil {
+    log.Fatal(err)
+}
+
+if err := app.Static("/assets", assets); err != nil {
+    log.Fatal(err)
+}
+```
+
+If you want the raw handler for plain `net/http` usage:
+
+```go
+h, err := aile.StaticHandler("/assets/", assets)
+if err != nil {
+    log.Fatal(err)
+}
+```
+
+Under the hood this is still just `http.FileServerFS` plus prefix handling.
+
 ## JSON helpers
 
 ```go
@@ -150,10 +212,10 @@ import (
 	"log"
 	"net/http"
 
-	"codeberg.org/urutau-ltd/aile"
-	"codeberg.org/urutau-ltd/aile/x/combine"
-	"codeberg.org/urutau-ltd/aile/x/requestid"
-	"codeberg.org/urutau-ltd/aile/x/secureheaders"
+	"codeberg.org/urutau-ltd/aile/v2"
+	"codeberg.org/urutau-ltd/aile/v2/x/combine"
+	requestid "codeberg.org/urutau-ltd/aile/v2/x/request_id"
+	secureheaders "codeberg.org/urutau-ltd/aile/v2/x/secure_headers"
 )
 
 func main() {
@@ -192,8 +254,8 @@ import (
 	"log"
 	"net/http"
 
-	"codeberg.org/urutau-ltd/aile"
-	"codeberg.org/urutau-ltd/aile/x/cors"
+	"codeberg.org/urutau-ltd/aile/v2"
+	"codeberg.org/urutau-ltd/aile/v2/x/cors"
 )
 
 func main() {
@@ -229,8 +291,8 @@ import (
 	"log"
 	"net/http"
 
-	"codeberg.org/urutau-ltd/aile"
-	"codeberg.org/urutau-ltd/aile/x/requestid"
+	"codeberg.org/urutau-ltd/aile/v2"
+	requestid "codeberg.org/urutau-ltd/aile/v2/x/request_id"
 )
 
 func main() {
@@ -266,8 +328,8 @@ import (
 	"log"
 	"net/http"
 
-	"codeberg.org/urutau-ltd/aile"
-	"codeberg.org/urutau-ltd/aile/x/secureheaders"
+	"codeberg.org/urutau-ltd/aile/v2"
+	secureheaders "codeberg.org/urutau-ltd/aile/v2/x/secure_headers"
 )
 
 func main() {
@@ -305,8 +367,8 @@ import (
 	"log"
 	"net/http"
 
-	"codeberg.org/urutau-ltd/aile"
-	"codeberg.org/urutau-ltd/aile/x/trailingslash"
+	"codeberg.org/urutau-ltd/aile/v2"
+	trailingslash "codeberg.org/urutau-ltd/aile/v2/x/trailing_slash"
 )
 
 func main() {
@@ -338,8 +400,8 @@ import (
 	"log"
 	"net/http"
 
-	"codeberg.org/urutau-ltd/aile"
-	"codeberg.org/urutau-ltd/aile/x/bearerauth"
+	"codeberg.org/urutau-ltd/aile/v2"
+	bearerauth "codeberg.org/urutau-ltd/aile/v2/x/bearer_auth"
 )
 
 func main() {
@@ -372,8 +434,8 @@ import (
 	"log"
 	"net/http"
 
-	"codeberg.org/urutau-ltd/aile"
-	"codeberg.org/urutau-ltd/aile/x/basicauth"
+	"codeberg.org/urutau-ltd/aile/v2"
+	basicauth "codeberg.org/urutau-ltd/aile/v2/x/basic_auth"
 )
 
 func main() {
@@ -414,8 +476,8 @@ import (
 	"net/http"
 	"strings"
 
-	"codeberg.org/urutau-ltd/aile"
-	"codeberg.org/urutau-ltd/aile/x/compress"
+	"codeberg.org/urutau-ltd/aile/v2"
+	"codeberg.org/urutau-ltd/aile/v2/x/compress"
 )
 
 func main() {
@@ -449,8 +511,8 @@ import (
 	"net"
 	"net/http"
 
-	"codeberg.org/urutau-ltd/aile"
-	"codeberg.org/urutau-ltd/aile/x/iprestriction"
+	"codeberg.org/urutau-ltd/aile/v2"
+	iprestriction "codeberg.org/urutau-ltd/aile/v2/x/ip_restriction"
 )
 
 func mustCIDR(s string) *net.IPNet {
@@ -503,12 +565,12 @@ import (
 	"net/http"
 	"time"
 
-	"codeberg.org/urutau-ltd/aile"
-	"codeberg.org/urutau-ltd/aile/x/combine"
-	"codeberg.org/urutau-ltd/aile/x/cors"
-	"codeberg.org/urutau-ltd/aile/x/requestid"
-	"codeberg.org/urutau-ltd/aile/x/secureheaders"
-	xlogger "codeberg.org/urutau-ltd/aile/x/logger"
+	"codeberg.org/urutau-ltd/aile/v2"
+	"codeberg.org/urutau-ltd/aile/v2/x/combine"
+	"codeberg.org/urutau-ltd/aile/v2/x/cors"
+	requestid "codeberg.org/urutau-ltd/aile/v2/x/request_id"
+	secureheaders "codeberg.org/urutau-ltd/aile/v2/x/secure_headers"
+	xlogger "codeberg.org/urutau-ltd/aile/v2/x/logger"
 )
 
 type article struct {
@@ -592,17 +654,64 @@ func main() {
 
 See [CONTRIBUTING.md](CONTRIBUTING.md)
 
-## GNU Guix compatiblity
+## Development
 
-This project is being developed in GNU Guix. And thus the supported Go version
-is the latest available on GNU Guix. You may use some utilities present in this
-repository if you wish to contribute using guix:
+The repository lives on Codeberg and is mirrored to GitHub.
 
-- `make env` should create a new guix shell environment with the necessary
-  development dependencies.
+Most development happens through:
 
-- `make pkg` should test if the `guix.scm` package definition of this library
-  builds and installs correctly under GNU Guix.
+- Guix development shells via `make guix-env`
+- Guix-backed verification via `make check`
+- explicit Guix aliases via `make guix-test`, `make guix-vet`, and
+  `make guix-check`
+- local containerized verification via Podman and `podman-compose` as a
+  secondary path
+- Emacs as the primary IDE, with Eglot using `gopls` for Go files
+
+Project-local Emacs settings live in [`.dir-locals.el`](./.dir-locals.el).
+`make emacs` opens Emacs inside the Guix development environment.
+
+If you want to bypass Guix in the current shell, use the explicit local targets:
+
+```bash
+$ make check-local
+$ make test-local
+$ make vet-local
+```
+
+### Local Podman Pipeline
+
+Run the local containerized pipeline with:
+
+```bash
+$ make podman-check
+```
+
+Open an interactive shell in the same development image with:
+
+```bash
+$ make podman-shell
+```
+
+If `podman` lives outside your default `PATH`, override it explicitly:
+
+```bash
+$ make podman-check PODMAN=/absolute/path/to/podman
+```
+
+## GNU Guix Compatibility
+
+This project is developed with GNU Guix. The manifest tracks the Go 1.26 series.
+These helpers cover the usual Guix tasks:
+
+- `make guix-env` opens a shell with the development tools used by the repo,
+  including Emacs, `gopls`, Podman, and `podman-compose`.
+
+- `make check` and `make guix-check` run the default verification flow through
+  the Guix manifest, using Go 1.26.
+
+- `make pkg` checks that the `guix.scm` package definition for the current
+  checkout resolves and builds under GNU Guix.
 
 ## COPYING
 

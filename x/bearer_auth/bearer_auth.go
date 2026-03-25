@@ -4,11 +4,13 @@ import (
 	"net/http"
 	"strings"
 
-	"codeberg.org/urutau-ltd/aile"
+	"codeberg.org/urutau-ltd/aile/v2"
 )
 
+// Validator checks whether a bearer token is accepted.
 type Validator func(token string) bool
 
+// Middleware enforces Bearer token authentication for the wrapped handler.
 func Middleware(validate Validator) aile.Middleware {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

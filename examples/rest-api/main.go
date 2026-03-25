@@ -9,9 +9,9 @@ import (
 	"strconv"
 	"sync"
 
-	"codeberg.org/urutau-ltd/aile"
-	"codeberg.org/urutau-ltd/aile/x/health"
-	xlogger "codeberg.org/urutau-ltd/aile/x/logger"
+	"codeberg.org/urutau-ltd/aile/v2"
+	"codeberg.org/urutau-ltd/aile/v2/x/health"
+	xlogger "codeberg.org/urutau-ltd/aile/v2/x/logger"
 )
 
 type article struct {
@@ -82,11 +82,11 @@ func main() {
 
 	health.Mount(app)
 
-	app.HandleFunc("GET /api/articles", func(w http.ResponseWriter, r *http.Request) {
+	app.GET("/api/articles", func(w http.ResponseWriter, r *http.Request) {
 		_ = aile.WriteJSON(w, http.StatusOK, st.list())
 	})
 
-	app.HandleFunc("POST /api/articles", func(w http.ResponseWriter, r *http.Request) {
+	app.POST("/api/articles", func(w http.ResponseWriter, r *http.Request) {
 		var req createArticleRequest
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			aile.Error(w, http.StatusBadRequest, "invalid json")
@@ -100,7 +100,7 @@ func main() {
 		_ = aile.WriteJSON(w, http.StatusCreated, item)
 	})
 
-	app.HandleFunc("GET /api/articles/{id}", func(w http.ResponseWriter, r *http.Request) {
+	app.GET("/api/articles/{id}", func(w http.ResponseWriter, r *http.Request) {
 		id, err := strconv.Atoi(r.PathValue("id"))
 		if err != nil {
 			aile.Error(w, http.StatusBadRequest, "invalid id")

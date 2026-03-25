@@ -9,11 +9,12 @@ import (
 	"sync/atomic"
 	"time"
 
-	"codeberg.org/urutau-ltd/aile"
+	"codeberg.org/urutau-ltd/aile/v2"
 )
 
 type contextKey struct{}
 
+// Config controls request ID propagation and generation.
 type Config struct {
 	Header    string
 	Generator func() string
@@ -21,6 +22,8 @@ type Config struct {
 
 var fallbackCounter uint64
 
+// Middleware propagates or generates a request ID and stores it in the request
+// context.
 func Middleware(cfg Config) aile.Middleware {
 	header := cfg.Header
 	if header == "" {
@@ -44,6 +47,7 @@ func Middleware(cfg Config) aile.Middleware {
 	}
 }
 
+// FromContext returns the request ID stored by the middleware, if present.
 func FromContext(ctx context.Context) (string, bool) {
 	v, ok := ctx.Value(contextKey{}).(string)
 	return v, ok && v != ""

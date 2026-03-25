@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"sync"
 
-	"codeberg.org/urutau-ltd/aile"
-	"codeberg.org/urutau-ltd/aile/x/health"
+	"codeberg.org/urutau-ltd/aile/v2"
+	"codeberg.org/urutau-ltd/aile/v2/x/health"
 )
 
 // This is a similar concept as React component props. But in this
@@ -79,13 +79,13 @@ func main() {
 
 	health.Mount(app)
 
-	app.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
+	app.GET("/", func(w http.ResponseWriter, r *http.Request) {
 		if err := pageTmpl.Execute(w, counterPageData{Count: c.get()}); err != nil {
 			aile.Error(w, http.StatusInternalServerError, err.Error())
 		}
 	})
 
-	app.HandleFunc("POST /increment", func(w http.ResponseWriter, r *http.Request) {
+	app.POST("/increment", func(w http.ResponseWriter, r *http.Request) {
 		if err := pageTmpl.ExecuteTemplate(w, "counter", counterPageData{Count: c.inc()}); err != nil {
 			aile.Error(w, http.StatusInternalServerError, err.Error())
 		}

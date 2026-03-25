@@ -10,9 +10,10 @@ import (
 	"strings"
 	"sync"
 
-	"codeberg.org/urutau-ltd/aile"
+	"codeberg.org/urutau-ltd/aile/v2"
 )
 
+// Config controls gzip compression behavior.
 type Config struct {
 	Level   int
 	MinSize int
@@ -20,6 +21,8 @@ type Config struct {
 
 var gzipPool sync.Pool
 
+// Middleware compresses eligible responses with gzip when the client accepts
+// it.
 func Middleware(cfg Config) aile.Middleware {
 	level := cfg.Level
 	if level == 0 {
@@ -40,7 +43,7 @@ func Middleware(cfg Config) aile.Middleware {
 				minSize:        minSize,
 			}
 			defer cw.Close()
-			next.ServeHTTP(w, r)
+			next.ServeHTTP(cw, r)
 		})
 	}
 }

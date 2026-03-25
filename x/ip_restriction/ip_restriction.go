@@ -5,15 +5,17 @@ import (
 	"net/http"
 	"strings"
 
-	"codeberg.org/urutau-ltd/aile"
+	"codeberg.org/urutau-ltd/aile/v2"
 )
 
+// Config controls allow and deny lists for client IP filtering.
 type Config struct {
 	Allow      []*net.IPNet
 	Deny       []*net.IPNet
 	TrustProxy bool
 }
 
+// Middleware filters requests by client IP address or network.
 func Middleware(cfg Config) aile.Middleware {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

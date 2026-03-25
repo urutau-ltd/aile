@@ -3,11 +3,13 @@ package basicauth
 import (
 	"net/http"
 
-	"codeberg.org/urutau-ltd/aile"
+	"codeberg.org/urutau-ltd/aile/v2"
 )
 
+// Validator checks a username and password pair.
 type Validator func(user, pass string) bool
 
+// Middleware enforces HTTP Basic authentication for the wrapped handler.
 func Middleware(realm string, validate Validator) aile.Middleware {
 	if realm == "" {
 		realm = "restricted"

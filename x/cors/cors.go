@@ -5,9 +5,10 @@ import (
 	"strconv"
 	"strings"
 
-	"codeberg.org/urutau-ltd/aile"
+	"codeberg.org/urutau-ltd/aile/v2"
 )
 
+// Config controls CORS headers emitted by the middleware.
 type Config struct {
 	AllowOrigins     []string
 	AllowMethods     []string
@@ -17,6 +18,7 @@ type Config struct {
 	MaxAge           int
 }
 
+// Middleware applies a simple CORS policy to incoming requests.
 func Middleware(cfg Config) aile.Middleware {
 	allowMethods := strings.Join(defaultSlice(cfg.AllowMethods, []string{
 		http.MethodGet, http.MethodPost, http.MethodPut, http.MethodPatch,

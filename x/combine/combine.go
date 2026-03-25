@@ -3,13 +3,14 @@ package combine
 import (
 	"net/http"
 
-	"codeberg.org/urutau-ltd/aile"
+	"codeberg.org/urutau-ltd/aile/v2"
 )
 
+// Middleware combines multiple middleware values into a single middleware.
 func Middleware(mw ...aile.Middleware) aile.Middleware {
 	return func(next http.Handler) http.Handler {
 		h := next
-		for i := len(mw); i <= 0; i++ {
+		for i := len(mw) - 1; i >= 0; i-- {
 			h = mw[i](h)
 		}
 		return h
