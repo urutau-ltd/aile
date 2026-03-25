@@ -39,10 +39,10 @@ or directly:
 $ guix shell --network -m ./manifest.scm
 ```
 
-The default `make test`, `make vet`, `make check`, `make example-htmx`, and
-`make example-rest` targets run through the Guix manifest. `make guix-test`,
-`make guix-vet`, and `make guix-check` are there if you want to call the
-Guix-backed variants explicitly.
+The default `make test`, `make vet`, `make check`, `make example-htmx`,
+`make example-rest`, and `make example-html-admin` targets run through the Guix
+manifest. `make guix-test`, `make guix-vet`, and `make guix-check` are there if
+you want to call the Guix-backed variants explicitly.
 
 ## Onboarding
 
@@ -312,6 +312,51 @@ func main() {
 		})
 	})
 
+log.Fatal(app.Run(context.Background()))
+}
+```
+
+### HTMX Helpers
+
+If you are building an HTML app with HTMX and want to stop parsing `HX-*`
+headers by hand:
+
+```go
+package main
+
+import (
+	"context"
+	"html/template"
+	"log"
+	"net/http"
+
+	"codeberg.org/urutau-ltd/aile/v2"
+	"codeberg.org/urutau-ltd/aile/v2/x/htmx"
+)
+
+var pageTmpl = template.Must(template.New("editor").Parse(`<div id="os-editor">{{.}}</div>`))
+
+func main() {
+	app, err := aile.New()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	app.GET("/os/{id}/edit", func(w http.ResponseWriter, r *http.Request) {
+		if htmx.IsRequest(r) && htmx.TargetIs(r, "os-editor") {
+			_ = pageTmpl.Execute(w, "Partial editor for "+r.PathValue("id"))
+			return
+		}
+
+		_ = pageTmpl.Execute(w, "Full page editor for "+r.PathValue("id"))
+	})
+
+	app.POST("/os/{id}/edit", func(w http.ResponseWriter, r *http.Request) {
+		htmx.SetTrigger(w, "os:changed")
+		htmx.Redirect(w, "/os")
+		aile.Status(w, http.StatusNoContent)
+	})
+
 	log.Fatal(app.Run(context.Background()))
 }
 ```
@@ -547,9 +592,96 @@ func main() {
 
 These are convenience packages, not core concepts.
 
+### Resource Mounting
+
+If your `main.go` is repeating the same CRUD-style route blocks over and over,
+you can mount those conventions once:
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+	"net/http"
+
+	"codeberg.org/urutau-ltd/aile/v2"
+	"codeberg.org/urutau-ltd/aile/v2/x/resource"
+)
+
+type providersHandler struct{}
+
+func (providersHandler) Index(w http.ResponseWriter, r *http.Request)  { aile.Text(w, http.StatusOK, "providers index") }
+func (providersHandler) New(w http.ResponseWriter, r *http.Request)    { aile.Text(w, http.StatusOK, "providers new") }
+func (providersHandler) Create(w http.ResponseWriter, r *http.Request) { aile.Status(w, http.StatusCreated) }
+func (providersHandler) Show(w http.ResponseWriter, r *http.Request)   { aile.Text(w, http.StatusOK, "provider "+r.PathValue("id")) }
+func (providersHandler) Edit(w http.ResponseWriter, r *http.Request)   { aile.Text(w, http.StatusOK, "provider edit "+r.PathValue("id")) }
+func (providersHandler) Update(w http.ResponseWriter, r *http.Request) { aile.Text(w, http.StatusOK, "provider update "+r.PathValue("id")) }
+func (providersHandler) Delete(w http.ResponseWriter, r *http.Request) { aile.Status(w, http.StatusNoContent) }
+
+type appSettingsHandler struct{}
+
+func (appSettingsHandler) Show(w http.ResponseWriter, r *http.Request)   { aile.Text(w, http.StatusOK, "settings show") }
+func (appSettingsHandler) Edit(w http.ResponseWriter, r *http.Request)   { aile.Text(w, http.StatusOK, "settings edit") }
+func (appSettingsHandler) Update(w http.ResponseWriter, r *http.Request) { aile.Text(w, http.StatusOK, "settings update") }
+
+func main() {
+	app, err := aile.New()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if err := resource.MountCollection(app, "/providers", providersHandler{}); err != nil {
+		log.Fatal(err)
+	}
+
+	if err := resource.MountSingleton(app, "/app-settings", appSettingsHandler{}); err != nil {
+		log.Fatal(err)
+	}
+
+	log.Fatal(app.Run(context.Background()))
+}
+```
+
 ## Examples
 
 You can see more examples at the [`examples/`](./examples/) directory.
+
+### CRUD-style HTML app wiring
+
+For an app like:
+
+- `/providers`
+- `/locations`
+- `/os`
+- `/app-settings`
+- `/account-settings`
+
+your `main.go` can stay flat:
+
+```go
+providersHandler := providers.NewHandler(logger, uiRoot, dbConn)
+locationsHandler := locations.NewHandler(logger, uiRoot, dbConn)
+osHandler := operatingsystems.NewHandler(logger, uiRoot, dbConn)
+appSettingsHandler := appsettings.NewHandler(logger, uiRoot, dbConn)
+
+if err := app.Static("/static", staticRoot); err != nil {
+	log.Fatal(err)
+}
+
+if err := resource.MountCollection(app, "/providers", providersHandler); err != nil {
+	log.Fatal(err)
+}
+if err := resource.MountCollection(app, "/locations", locationsHandler); err != nil {
+	log.Fatal(err)
+}
+if err := resource.MountCollection(app, "/os", osHandler); err != nil {
+	log.Fatal(err)
+}
+if err := resource.MountSingleton(app, "/app-settings", appSettingsHandler); err != nil {
+	log.Fatal(err)
+}
+```
 
 ### Small Blog API example
 

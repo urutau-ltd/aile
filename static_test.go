@@ -112,3 +112,29 @@ func TestStaticRejectsInvalidInputs(t *testing.T) {
 		})
 	}
 }
+
+func TestStaticRedirectPreservesQueryString(t *testing.T) {
+	app := MustNew()
+	err := app.Static("/assets", fstest.MapFS{
+		"app.css": &fstest.MapFile{Data: []byte("body{color:black}")},
+	})
+	if err != nil {
+		t.Fatalf("Static returned error: %v", err)
+	}
+
+	st, err := app.Build(context.Background())
+	if err != nil {
+		t.Fatalf("Build returned error: %v", err)
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/assets?v=42", nil)
+	rec := httptest.NewRecorder()
+	st.Handler.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusPermanentRedirect {
+		t.Fatalf("unexpected status: got %d want %d", rec.Code, http.StatusPermanentRedirect)
+	}
+	if got := rec.Header().Get("Location"); got != "/assets/?v=42" {
+		t.Fatalf("unexpected redirect location: got %q want %q", got, "/assets/?v=42")
+	}
+}

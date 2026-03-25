@@ -101,6 +101,6 @@ func ExampleVersion() {
 	fmt.Println(aile.Version)
 	fmt.Println(aile.ReleaseTag)
 	// Output:
-	// 2.0.0
-	// v2.0.0
+	// 2.1.0
+	// v2.1.0
 }

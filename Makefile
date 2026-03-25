@@ -9,7 +9,8 @@ GO_ENV = CGO_ENABLED=0
 
 .PHONY: all test test-local vet vet-local check check-local env guix-env emacs \
 	guix-test guix-vet guix-check podman-build podman-check podman-shell pkg ci \
-	example-htmx example-htmx-local example-rest example-rest-local
+	example-htmx example-htmx-local example-rest example-rest-local \
+	example-html-admin example-html-admin-local
 
 all: ci
 
@@ -65,8 +66,14 @@ example-htmx-local:
 example-rest-local:
 	$(GO_ENV) go run ./examples/rest-api/main.go
 
+example-html-admin-local:
+	$(GO_ENV) go run ./examples/html-admin/main.go
+
 example-htmx:
 	$(GUIX_SHELL) $(MAKE) example-htmx-local
 
 example-rest:
 	$(GUIX_SHELL) $(MAKE) example-rest-local
+
+example-html-admin:
+	$(GUIX_SHELL) $(MAKE) example-html-admin-local

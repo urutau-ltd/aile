@@ -40,6 +40,7 @@ The default `make` targets run through the Guix manifest:
 - `make guix-check`
 - `make example-htmx`
 - `make example-rest`
+- `make example-html-admin`
 
 ## Onboarding checklist
 
